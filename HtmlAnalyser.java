@@ -17,7 +17,7 @@ public class HtmlAnalyser {
             return; */
         }
 
-        String urlString = "https://raw.githubusercontent.com/mdn/beginner-html-site/gh-pages/index.html";
+        String urlString = "https://raw.githubusercontent.com/PaBLOHenCh/ParserHtml/refs/heads/main/html_tests/html_01.html";
 
         try {
             List<String> lines = downloadHtml(urlString);
@@ -63,6 +63,8 @@ public class HtmlAnalyser {
 
         Deque<String> stack = new ArrayDeque<>();
 
+        String peek ="";
+
         int maxDepth = 0;
         int tempMaxDepth = 0;
         String deepestText = "";
@@ -82,7 +84,7 @@ public class HtmlAnalyser {
                 }
                 else{
                     //its text
-                    if(tempMaxDepth > maxDepth+1){
+                    if(tempMaxDepth > maxDepth){
                         deepestText = line;
                     }
                 }
@@ -90,7 +92,11 @@ public class HtmlAnalyser {
             else{
                 //its closing tag
                 String tag = line.substring(2, lineLength -1);
-                if(stack.peek() == tag){
+
+                peek = stack.peekFirst();
+
+
+                if(peek.strip().equals(tag)){
                     stack.pop();
                     tempMaxDepth -= 1;
                 }
@@ -100,7 +106,7 @@ public class HtmlAnalyser {
             }
 
             if(tempMaxDepth > maxDepth){
-                maxDepth = tempMaxDepth -1;
+                maxDepth = tempMaxDepth ;
                 
                 
             }
