@@ -7,7 +7,7 @@ public class Result {
         this.deepestText = deepestText;
     }
     public void print_result(){
-        System.out.println(this.maxDepth);
-        System.out.println(this.deepestText);
+        System.out.println("Maxima profundidade: " + this.maxDepth);
+        System.out.println("Texto mais profundo: " + this.deepestText);
     }
 }

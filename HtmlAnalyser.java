@@ -13,11 +13,11 @@ public class HtmlAnalyser {
     public static void main(String[] args) {
 
         if (args.length != 1) {
-            /* System.out.println("Please, inform at least one URL");
-            return; */
+            System.out.println("Please, inform at least one URL");
+            return;
         }
 
-        String urlString = "https://raw.githubusercontent.com/PaBLOHenCh/ParserHtml/refs/heads/main/html_tests/html_01.html";
+        String urlString = args[0];
 
         try {
             List<String> lines = downloadHtml(urlString);
@@ -46,7 +46,6 @@ public class HtmlAnalyser {
     
                 if(!(line.isEmpty())) {
                     lines.add(line);
-                    lines.add("\n");
                 }
                 
             }
@@ -65,8 +64,8 @@ public class HtmlAnalyser {
 
         String peek ="";
 
-        int maxDepth = 0;
-        int tempMaxDepth = 0;
+        int maxDeep = 0;
+        int localMaxDeep = 0;
         String deepestText = "";
 
         for (String line : htmlLines) {
@@ -77,15 +76,16 @@ public class HtmlAnalyser {
                 if(line.startsWith("<")) {
                     //its opening tag
                     stack.push(line.substring(1, lineLength - 1));
-                    tempMaxDepth += 1;
+                    localMaxDeep += 1;
                 }
                 else if(line == "" || line == "\n"){
                     continue;
                 }
                 else{
                     //its text
-                    if(tempMaxDepth > maxDepth){
+                    if(localMaxDeep > maxDeep){
                         deepestText = line;
+                        maxDeep = localMaxDeep;
                     }
                 }
             }
@@ -98,25 +98,20 @@ public class HtmlAnalyser {
 
                 if(peek.strip().equals(tag)){
                     stack.pop();
-                    tempMaxDepth -= 1;
+                    localMaxDeep -= 1;
                 }
                 else{
                     throw new Exception("Tag " + line + " without corresponding opening tag HTML malformed");
                 }
             }
 
-            if(tempMaxDepth > maxDepth){
-                maxDepth = tempMaxDepth ;
-                
-                
-            }
         }
 
         if(stack.size() != 0){
             throw new Exception("HTML malformed. There are unclosed tags");
         }
 
-        return new Result(maxDepth +1, deepestText);
+        return new Result(maxDeep, deepestText);
     }
 
 }
