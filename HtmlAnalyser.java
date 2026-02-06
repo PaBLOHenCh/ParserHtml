@@ -5,6 +5,9 @@ import java.net.URL;
 import java.util.Deque;
 import java.util.ArrayDeque;
 import java.util.List;
+
+import javax.sound.sampled.Line;
+
 import java.util.ArrayList;
 
 
@@ -20,7 +23,7 @@ public class HtmlAnalyser {
         String urlString = args[0];
 
         try {
-            List<String> lines = downloadHtml(urlString);
+            List<LineInfo> lines = downloadHtml(urlString);
             Result result = searchDeepestText(lines);
 
             result.print_result();
@@ -30,12 +33,13 @@ public class HtmlAnalyser {
         }
     }
 
-    private static List<String> downloadHtml(String urlString) throws Exception {
+    private static List<LineInfo> downloadHtml(String urlString) throws Exception {
 
         URL url = new URL(urlString);
 
-        List<String> lines = new ArrayList<>();
+        List<LineInfo> lines = new ArrayList<>();
         String line;
+        int lineNumber = 0;
 
 
         try {
@@ -43,9 +47,10 @@ public class HtmlAnalyser {
 
             while ((line = reader.readLine()) != null) {
                 line = line.strip();
+                lineNumber++;
     
                 if(!(line.isEmpty())) {
-                    lines.add(line);
+                    lines.add(new LineInfo(lineNumber, line));
                 }
                 
             }
@@ -58,7 +63,7 @@ public class HtmlAnalyser {
         return lines;
     }
 
-    private static Result searchDeepestText(List<String> htmlLines) throws Exception {
+    private static Result searchDeepestText(List<LineInfo> htmlLines) throws Exception {
 
         Deque<String> stack = new ArrayDeque<>();
 
@@ -68,40 +73,45 @@ public class HtmlAnalyser {
         int localMaxDeep = 0;
         String deepestText = "";
 
-        for (String line : htmlLines) {
-            int lineLength = line.length();
-            if(!(line.startsWith("</"))){
+        for (LineInfo line : htmlLines) {
+            String line_text = line.getLineText().strip();
+            int lineLength = line_text.length();
+            if(!(line_text.startsWith("</"))){
                 //its text or opening tag
 
-                if(line.startsWith("<")) {
+                if(line_text.startsWith("<")) {
                     //its opening tag
-                    stack.push(line.substring(1, lineLength - 1));
+                    stack.push(line_text.substring(1, lineLength - 1));
                     localMaxDeep += 1;
                 }
-                else if(line == "" || line == "\n"){
+                else if(line_text == "" || line_text == "\n"){
                     continue;
                 }
                 else{
                     //its text
                     if(localMaxDeep > maxDeep){
-                        deepestText = line;
+                        deepestText = line_text;
                         maxDeep = localMaxDeep;
                     }
                 }
             }
             else{
                 //its closing tag
-                String tag = line.substring(2, lineLength -1);
+                String tag = line_text.substring(2, lineLength -1);
 
                 peek = stack.peekFirst();
 
+                if(peek == null){
+                    throw new Exception("Error at line " + line.getLineNumber() + "." + "\nThere are many closing tags, " + line_text + " are not necessary");
+                }
 
                 if(peek.strip().equals(tag)){
                     stack.pop();
                     localMaxDeep -= 1;
                 }
                 else{
-                    throw new Exception("Tag " + line + " without corresponding opening tag HTML malformed");
+                    throw new Exception("Error at line " + line.getLineNumber() + "." + "\nYou cant close tag " + line_text
+                    + " without close tag"+ " <"+peek+">" + "\nHTML malformed");
                 }
             }
 
